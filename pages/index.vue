@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen p-8 bg-gradient-to-b from-white to-gray-100">
+  <main
+    class="min-h-screen mx-auto p-8 bg-gradient-to-b from-white to-gray-100 sm:w-full md:w-full lg:w-[50%]"
+  >
     <h1 class="text-3xl font-bold mb-6">🍳 Build Your Recipe</h1>
 
     <IngredientSelector
@@ -31,9 +33,16 @@
           Simple Instruction:
           <span class="font-medium">{{ recipe.instructions }}</span>
         </p>
+
+        <button
+          @click="saveToFavorites(recipe)"
+          class="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+        >
+          💾 Save to Favorites
+        </button>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -70,15 +79,23 @@ const allIngredients = [
   'Milk',
 ];
 
-interface Recipe {
+type Recipe = {
   id: number;
   title: string;
   ingredients: string[];
   instructions: string;
-}
+};
 
 const selectedIngredients = ref<string[]>([]);
 const recipes = ref<Recipe[]>([]);
+const favorites = ref<Recipe[]>([]);
+
+onMounted(() => {
+  const stored = localStorage.getItem('favorites');
+  if (stored) {
+    favorites.value = JSON.parse(stored);
+  }
+});
 
 const findRecipes = async () => {
   const { data } = await useFetch<Recipe[]>('/api/recipes', {
@@ -89,5 +106,13 @@ const findRecipes = async () => {
   });
 
   recipes.value = data.value || [];
+};
+
+const saveToFavorites = (recipe: Recipe) => {
+  const exists = favorites.value.some((r) => r.id === recipe.id);
+  if (!exists) {
+    favorites.value.push(recipe);
+    localStorage.setItem('favorites', JSON.stringify(favorites.value));
+  }
 };
 </script>

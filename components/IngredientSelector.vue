@@ -3,7 +3,7 @@
     <div
       v-for="ingredient in ingredients"
       :key="ingredient"
-      class="flex items-center gap-2 bg-gray-100 p-2 rounded-md shadow hover:bg-gray-200 cursor-pointer"
+      class="flex flex-wrap grow items-center gap-2 bg-gray-100 p-2 rounded-md shadow hover:bg-gray-200 cursor-pointer"
     >
     <label class="flex items-center gap-2 cursor-pointer select-none">
       <input
