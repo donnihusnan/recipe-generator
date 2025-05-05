@@ -2,7 +2,7 @@
   <main
     class="min-h-screen mx-auto p-8 bg-gradient-to-b from-white to-gray-100 sm:w-full md:w-full lg:w-[50%]"
   >
-    <h1 class="text-3xl font-bold mb-6">🍳 Build Your Recipe</h1>
+    <h1 class="text-3xl font-bold mb-6">Build Your Recipe</h1>
 
     <IngredientSelector
       :ingredients="allIngredients"
