@@ -17,7 +17,7 @@
     </button>
 
     <div v-if="recipes.length" class="mt-12 space-y-6">
-      <h2 class="text-2xl font-semibold">✨ Suggested Recipes</h2>
+      <h2 class="text-2xl font-semibold">✨Suggested Recipes</h2>
 
       <div
         v-for="recipe in recipes"
