@@ -103,7 +103,7 @@ const saveToFavorites = (recipe: Recipe) => {
         class="bg-white p-4 rounded-md shadow"
       >
         <h3 class="text-xl font-bold mb-2">{{ recipe.title }}</h3>
-        <p class="text-md font-bold text-gray-700">
+        <p class="text-md font-bold text-gray-800">
           Ingredients:
           <span class="font-medium"> {{ recipe.ingredients.join(', ') }}</span>
         </p>
