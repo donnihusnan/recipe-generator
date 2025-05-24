@@ -1,4 +1,4 @@
-#TODO Remove Favorites [] #TODO Add Favorites Page []
+#TODO Remove Favorites [x] #TODO Add Favorites Page []
 <script setup lang="ts">
 const allIngredients = [
   'Beef',
@@ -62,12 +62,18 @@ const findRecipes = async () => {
   recipes.value = data.value || [];
 };
 
+const isFavorite = (recipe: Recipe) => {
+  return favorites.value.some((r) => r.id === recipe.id);
+};
+
 const saveToFavorites = (recipe: Recipe) => {
-  const exists = favorites.value.some((r) => r.id === recipe.id);
-  if (!exists) {
-    favorites.value.push(recipe);
-    localStorage.setItem('favorites', JSON.stringify(favorites.value));
-  }
+  favorites.value.push(recipe);
+  localStorage.setItem('favorites', JSON.stringify(favorites.value));
+};
+
+const removeFromFavorites = (recipe: Recipe) => {
+  favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
+  localStorage.setItem('favorites', JSON.stringify(favorites.value));
 };
 </script>
 
@@ -111,8 +117,16 @@ const saveToFavorites = (recipe: Recipe) => {
           Simple Instruction:
           <span class="font-medium">{{ recipe.instructions }}</span>
         </p>
+        <button
+          v-if="isFavorite(recipe)"
+          @click="removeFromFavorites(recipe)"
+          class="mt-2 bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
+        >
+          ❌ Remove from Favorites
+        </button>
 
         <button
+          v-else
           @click="saveToFavorites(recipe)"
           class="mt-2 bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
         >
