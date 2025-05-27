@@ -83,6 +83,9 @@ const removeFromFavorites = (recipe: Recipe) => {
   >
     <div class="flex justify-between">
       <h1 class="text-3xl font-bold mb-6">Build Your Recipe</h1>
+      <NuxtLink to="/favorites" class="text-blue-600 hover:underline"
+        >Favorites</NuxtLink
+      >
       <div>
         <FavouriteDropdown :favorites="favorites" />
       </div>
@@ -95,20 +98,24 @@ const removeFromFavorites = (recipe: Recipe) => {
 
     <button
       @click="findRecipes"
-      class="mt-8 px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition"
+      class="mt-8 px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 cursor-pointer transition"
     >
       Find Recipes
     </button>
 
     <div v-if="recipes.length" class="mt-12 space-y-6">
-      <h2 class="text-2xl font-semibold">✨Suggested Recipes</h2>
+      <h2 class="text-2xl font-semibold">Suggested Recipes</h2>
 
       <div
         v-for="recipe in recipes"
         :key="recipe.id"
         class="bg-white p-4 rounded-md shadow"
       >
-        <h3 class="text-xl font-bold mb-2">{{ recipe.title }}</h3>
+        <NuxtLink
+          :to="`/recipes/${recipe.id}`"
+          class="text-xl font-bold mb-2"
+          >{{ recipe.title }}</NuxtLink
+        >
         <p class="text-md font-bold text-gray-800">
           Ingredients:
           <span class="font-medium"> {{ recipe.ingredients.join(', ') }}</span>
@@ -120,7 +127,7 @@ const removeFromFavorites = (recipe: Recipe) => {
         <button
           v-if="isFavorite(recipe)"
           @click="removeFromFavorites(recipe)"
-          class="mt-2 bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
+          class="mt-2 cursor-pointer bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800 transition"
         >
           ❌ Remove from Favorites
         </button>
@@ -128,7 +135,7 @@ const removeFromFavorites = (recipe: Recipe) => {
         <button
           v-else
           @click="saveToFavorites(recipe)"
-          class="mt-2 bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
+          class="mt-2 cursor-pointer bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
         >
           💾 Save to Favorites
         </button>
