@@ -1,4 +1,3 @@
-#TODO Remove Favorites [x] #TODO Add Favorites Page []
 <script setup lang="ts">
 const allIngredients = [
   'Beef',
@@ -75,6 +74,9 @@ const removeFromFavorites = (recipe: Recipe) => {
   favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
   localStorage.setItem('favorites', JSON.stringify(favorites.value));
 };
+
+const { $supabase } = useNuxtApp();
+console.log($supabase);
 </script>
 
 <template>
