@@ -74,9 +74,6 @@ const removeFromFavorites = (recipe: Recipe) => {
   favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
   localStorage.setItem('favorites', JSON.stringify(favorites.value));
 };
-
-const { $supabase } = useNuxtApp();
-console.log($supabase);
 </script>
 
 <template>
@@ -87,6 +84,9 @@ console.log($supabase);
       <h1 class="text-3xl font-bold mb-6">Build Your Recipe</h1>
       <NuxtLink to="/favorites" class="text-blue-600 hover:underline"
         >Favorites</NuxtLink
+      >
+      <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline"
+        >Add Recipe</NuxtLink
       >
       <div>
         <FavouriteDropdown :favorites="favorites" />

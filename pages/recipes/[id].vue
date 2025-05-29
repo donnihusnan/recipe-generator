@@ -3,7 +3,6 @@ const route = useRoute();
 const id = route.params.id;
 
 const { data: recipe, error } = await useFetch(`/api/recipes/${id}`);
-console.log(id);
 </script>
 
 <template>
