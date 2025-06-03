@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import type { Recipe } from '@/types/recipe';
+
+const {
+  getRecipes,
+  filterByIngredients,
+  isLoading: recipesLoading,
+  totalRecipes,
+} = useRecipes();
+
 const allIngredients = [
   'Beef',
   'Chicken',
@@ -32,48 +41,73 @@ const allIngredients = [
   'Milk',
 ];
 
-type Recipe = {
-  id: number;
-  title: string;
-  ingredients: string[];
-  instructions: string;
-};
-
 const selectedIngredients = ref<string[]>([]);
-const recipes = ref<Recipe[]>([]);
 const favorites = ref<Recipe[]>([]);
+const localLoading = ref(false);
 
-onMounted(() => {
-  const stored = localStorage.getItem('favorites');
-  if (stored) {
-    favorites.value = JSON.parse(stored);
-  }
+const filteredRecipes = computed(() => {
+  return filterByIngredients(selectedIngredients.value);
 });
 
-const findRecipes = async () => {
-  const { data } = await useFetch<Recipe[]>('/api/recipes', {
-    method: 'POST',
-    body: {
-      ingredients: selectedIngredients.value,
-    },
-  });
+const isLoading = computed(() => recipesLoading.value || localLoading.value);
 
-  recipes.value = data.value || [];
+const loadFavorites = () => {
+  if (process.client) {
+    const stored = localStorage.getItem('favorites');
+    if (stored) {
+      try {
+        favorites.value = JSON.parse(stored);
+      } catch (error) {
+        console.error('Error parsing favorites from localStorage:', error);
+        favorites.value = [];
+      }
+    }
+  }
 };
 
-const isFavorite = (recipe: Recipe) => {
+const saveFavoritesToStorage = () => {
+  if (process.client) {
+    localStorage.setItem('favorites', JSON.stringify(favorites.value));
+  }
+};
+
+const isFavorite = (recipe: Recipe): boolean => {
   return favorites.value.some((r) => r.id === recipe.id);
 };
 
 const saveToFavorites = (recipe: Recipe) => {
-  favorites.value.push(recipe);
-  localStorage.setItem('favorites', JSON.stringify(favorites.value));
+  if (!isFavorite(recipe)) {
+    favorites.value.push(recipe);
+    saveFavoritesToStorage();
+  }
 };
 
 const removeFromFavorites = (recipe: Recipe) => {
   favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
-  localStorage.setItem('favorites', JSON.stringify(favorites.value));
+  saveFavoritesToStorage();
 };
+
+onMounted(async () => {
+  loadFavorites();
+
+  if (totalRecipes.value === 0) {
+    await getRecipes();
+  }
+});
+
+watch(
+  selectedIngredients,
+  async (newIngredients) => {
+    if (newIngredients.length > 0) {
+      localLoading.value = true;
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      localLoading.value = false;
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <template>
@@ -82,15 +116,12 @@ const removeFromFavorites = (recipe: Recipe) => {
   >
     <div class="flex justify-between">
       <h1 class="text-3xl font-bold mb-6">Build Your Recipe</h1>
-      <NuxtLink to="/favorites" class="text-blue-600 hover:underline"
-        >Favorites</NuxtLink
-      >
-      <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline"
-        >Add Recipe</NuxtLink
-      >
-      <div>
-        <FavouriteDropdown :favorites="favorites" />
-      </div>
+      <NuxtLink to="/favorites" class="text-blue-600 hover:underline">
+        Favorites
+      </NuxtLink>
+      <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline">
+        Add Recipe
+      </NuxtLink>
     </div>
 
     <IngredientSelector
@@ -98,50 +129,96 @@ const removeFromFavorites = (recipe: Recipe) => {
       v-model="selectedIngredients"
     />
 
-    <button
-      @click="findRecipes"
-      class="mt-8 px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 cursor-pointer transition"
-    >
-      Find Recipes
-    </button>
+    <div class="mt-4 text-sm text-gray-600">
+      <p v-if="selectedIngredients.length > 0">
+        Selected: {{ selectedIngredients.join(', ') }}
+      </p>
+      <p v-if="totalRecipes > 0">
+        Total recipes in database: {{ totalRecipes }}
+      </p>
+    </div>
 
-    <div v-if="recipes.length" class="mt-12 space-y-6">
-      <h2 class="text-2xl font-semibold">Suggested Recipes</h2>
+    <div v-if="isLoading" class="mt-8 text-center">
+      <p>{{ recipesLoading ? 'Loading recipes...' : 'Finding recipes...' }}</p>
+    </div>
+
+    <div v-else-if="filteredRecipes.length" class="mt-12 space-y-6">
+      <h2 class="text-2xl font-semibold">
+        Found {{ filteredRecipes.length }} Recipe{{
+          filteredRecipes.length > 1 ? 's' : ''
+        }}
+      </h2>
 
       <div
-        v-for="recipe in recipes"
+        v-for="recipe in filteredRecipes"
         :key="recipe.id"
-        class="bg-white p-4 rounded-md shadow"
+        class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
       >
-        <NuxtLink
-          :to="`/recipes/${recipe.id}`"
-          class="text-xl font-bold mb-2"
-          >{{ recipe.title }}</NuxtLink
-        >
-        <p class="text-md font-bold text-gray-800">
-          Ingredients:
-          <span class="font-medium"> {{ recipe.ingredients.join(', ') }}</span>
-        </p>
-        <p class="text-gray-700 font-bold">
-          Simple Instruction:
-          <span class="font-medium">{{ recipe.instructions }}</span>
-        </p>
-        <button
-          v-if="isFavorite(recipe)"
-          @click="removeFromFavorites(recipe)"
-          class="mt-2 cursor-pointer bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800 transition"
-        >
-          ❌ Remove from Favorites
-        </button>
+        <div class="flex justify-between items-start mb-4">
+          <NuxtLink
+            :to="`/recipes/${recipe.slug}`"
+            class="text-xl font-bold text-blue-600 hover:text-blue-800"
+          >
+            {{ recipe.title }}
+          </NuxtLink>
 
-        <button
-          v-else
-          @click="saveToFavorites(recipe)"
-          class="mt-2 cursor-pointer bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 transition"
-        >
-          💾 Save to Favorites
-        </button>
+          <button
+            v-if="isFavorite(recipe)"
+            @click="removeFromFavorites(recipe)"
+            class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm hover:bg-red-200 transition"
+          >
+            ❤️ Favorited
+          </button>
+          <button
+            v-else
+            @click="saveToFavorites(recipe)"
+            class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition"
+          >
+            🤍 Add to Favorites
+          </button>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold text-gray-800 mb-1">Ingredients:</p>
+          <div class="flex flex-wrap gap-1">
+            <span
+              v-for="ingredient in recipe.ingredients"
+              :key="ingredient"
+              :class="[
+                'px-2 py-1 rounded-full text-xs',
+                selectedIngredients.some((selected) =>
+                  ingredient.toLowerCase().includes(selected.toLowerCase())
+                )
+                  ? 'bg-green-100 text-green-800 font-medium'
+                  : 'bg-gray-100 text-gray-600',
+              ]"
+            >
+              {{ ingredient }}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <p class="font-semibold text-gray-800 mb-1">Instructions:</p>
+          <p class="text-gray-700 text-sm leading-relaxed">
+            {{ recipe.instructions }}
+          </p>
+        </div>
       </div>
+    </div>
+
+    <div
+      v-else-if="selectedIngredients.length > 0"
+      class="mt-12 text-center text-gray-500"
+    >
+      <p>No recipes found with those ingredients.</p>
+      <p class="text-sm mt-2">
+        Try selecting different ingredients or add a new recipe!
+      </p>
+    </div>
+
+    <div v-else class="mt-12 text-center text-gray-500">
+      <p>Select ingredients above to find matching recipes</p>
     </div>
   </main>
 </template>

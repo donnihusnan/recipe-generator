@@ -1,9 +1,9 @@
 export type Recipe = {
   id: number;
+  slug: string;
   title: string;
-  description?: string;
-  ingredients?: string[];
-  instructions?: string;
-  created_at?: string;
-  updated_at?: string;
+  ingredients: string[];
+  instructions: string;
+  created_at: string;
+  updated_at: string;
 };

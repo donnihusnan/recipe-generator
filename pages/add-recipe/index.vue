@@ -1,7 +1,13 @@
 <script lang="ts" setup>
-import { useRecipes } from '@/composables/useRecipes';
-
 const { createRecipe, loading, error } = useRecipes();
+
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-');
+}
 
 const title = ref('');
 const ingredient = ref('');
@@ -17,6 +23,7 @@ const addRecipe = async () => {
   try {
     await createRecipe({
       title: title.value,
+      slug: slugify(title.value),
       ingredients: ingredient.value.split(',').map((i) => i.trim()),
       instructions: instructions.value,
     });
@@ -95,5 +102,8 @@ watch(error, (newError) => {
     >
       {{ message }}
     </div>
+    <NuxtLink to="/" class="text-blue-600 hover:underline mt-6 block">
+      ← Back to Home
+    </NuxtLink>
   </main>
 </template>
