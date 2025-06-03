@@ -122,6 +122,9 @@ watch(
       <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline">
         Add Recipe
       </NuxtLink>
+      <div>
+        <FavouriteDropdown :favorites="favorites" />
+      </div>
     </div>
 
     <IngredientSelector
