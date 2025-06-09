@@ -5,57 +5,62 @@ type AuthState = {
   session: Session | null;
   loading: boolean;
   error: string | null;
+  initialized: boolean;
 };
+
+// Gunakan global state agar tersinkronisasi di semua komponen
+const globalAuthState = reactive<AuthState>({
+  user: null,
+  session: null,
+  loading: false,
+  error: null,
+  initialized: false,
+});
 
 export const useAuth = () => {
   const supabase = useSupabase();
 
-  const state = reactive<AuthState>({
-    user: null,
-    session: null,
-    loading: false,
-    error: null,
-  });
-
   const handleError = (error: AuthError | Error | null, context: string) => {
     if (error) {
-      state.error = error.message;
+      globalAuthState.error = error.message;
       console.error(`Error in ${context}:`, error);
     } else {
-      state.error = null;
+      globalAuthState.error = null;
     }
   };
 
   const clearError = () => {
-    state.error = null;
+    globalAuthState.error = null;
   };
 
   const getCurrentSession = async () => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const {
         data: { session },
         error,
       } = await supabase.auth.getSession();
+
       if (error) throw error;
 
-      state.session = session;
-      state.user = session?.user || null;
+      globalAuthState.session = session;
+      globalAuthState.user = session?.user || null;
+      globalAuthState.initialized = true;
 
       return session;
     } catch (error) {
       handleError(error as AuthError, 'getting current session');
       return null;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
   const signUp = async (email: string, password: string, metadata?: object) => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { data, error } = await supabase.auth.signUp({
@@ -73,13 +78,13 @@ export const useAuth = () => {
       handleError(error as AuthError, 'signing up');
       return null;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,21 +94,28 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      state.session = data.session;
-      state.user = data.user;
+      // Update state immediately
+      globalAuthState.session = data.session;
+      globalAuthState.user = data.user;
+
+      // Wait for next tick before navigating
+      await nextTick();
+
+      // Navigate to home page
+      await navigateTo('/', { replace: true });
 
       return data;
     } catch (error) {
       handleError(error as AuthError, 'signing in');
       throw error;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
-  const signInWithGoogle = async (provider: 'google') => {
+  const signInWithOAuth = async (provider: 'google' | 'github') => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -120,33 +132,39 @@ export const useAuth = () => {
       handleError(error as AuthError, `signing in with ${provider}`);
       throw error;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
   const signOut = async () => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { error } = await supabase.auth.signOut();
 
       if (error) throw error;
 
-      state.session = null;
-      state.user = null;
+      // Clear state immediately
+      globalAuthState.session = null;
+      globalAuthState.user = null;
 
-      await navigateTo('/');
+      // Wait for next tick before navigating
+      await nextTick();
+
+      // Navigate to login page
+      await navigateTo('/auth/login', { replace: true });
     } catch (error) {
       handleError(error as AuthError, 'signing out');
       throw error;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
+
   const resetPassword = async (email: string) => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -160,40 +178,54 @@ export const useAuth = () => {
       handleError(error as AuthError, 'resetting password');
       throw error;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
   const updateProfile = async (updates: { email?: string; data?: object }) => {
     try {
-      state.loading = true;
+      globalAuthState.loading = true;
       clearError();
 
       const { data, error } = await supabase.auth.updateUser(updates);
 
       if (error) throw error;
 
-      state.user = data.user;
+      globalAuthState.user = data.user;
 
       return data;
     } catch (error) {
       handleError(error as AuthError, 'updating profile');
       throw error;
     } finally {
-      state.loading = false;
+      globalAuthState.loading = false;
     }
   };
 
   const initAuthListener = () => {
     supabase.auth.onAuthStateChange(
-      (event: string, session: Session | null) => {
-        state.session = session;
-        state.user = session?.user || null;
+      async (event: string, session: Session | null) => {
+        console.log('Auth state change:', event, session?.user?.email);
+
+        globalAuthState.session = session;
+        globalAuthState.user = session?.user || null;
+        globalAuthState.initialized = true;
 
         if (event === 'SIGNED_IN') {
           console.log('User signed in: ', session?.user?.email);
+          // Optional: navigate to home if not already there
+          if (process.client && window.location.pathname.startsWith('/auth/')) {
+            await navigateTo('/', { replace: true });
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
+          // Optional: navigate to login if not already there
+          if (
+            process.client &&
+            !window.location.pathname.startsWith('/auth/')
+          ) {
+            await navigateTo('/auth/login', { replace: true });
+          }
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed');
         }
@@ -202,15 +234,18 @@ export const useAuth = () => {
   };
 
   const initialize = async () => {
-    await getCurrentSession();
-    initAuthListener();
+    if (!globalAuthState.initialized) {
+      await getCurrentSession();
+      initAuthListener();
+    }
   };
 
-  const isAuthenticated = computed(() => !!state.user);
-  const isLoading = computed(() => state.loading);
-  const user = computed(() => state.user);
-  const session = computed(() => state.session);
-  const error = computed(() => state.error);
+  const isAuthenticated = computed(() => !!globalAuthState.user);
+  const isLoading = computed(() => globalAuthState.loading);
+  const user = computed(() => globalAuthState.user);
+  const session = computed(() => globalAuthState.session);
+  const error = computed(() => globalAuthState.error);
+  const initialized = computed(() => globalAuthState.initialized);
 
   return {
     user: readonly(user),
@@ -218,11 +253,12 @@ export const useAuth = () => {
     isAuthenticated,
     isLoading,
     error: readonly(error),
+    initialized: readonly(initialized),
 
     initialize,
     signUp,
     signIn,
-    signInWithGoogle,
+    signInWithOAuth,
     signOut,
     resetPassword,
     updateProfile,

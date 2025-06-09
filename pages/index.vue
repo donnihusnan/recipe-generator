@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import type { Recipe } from '@/types/recipe';
+import { useAuth } from '~/composables/useAuth';
+
+import auth from '~/middleware/auth';
+
+definePageMeta({
+  middleware: auth,
+});
+
+const { user, session, signOut } = useAuth();
 
 const {
   getRecipes,
@@ -87,6 +96,14 @@ const removeFromFavorites = (recipe: Recipe) => {
   saveFavoritesToStorage();
 };
 
+const handleSignOut = async () => {
+  try {
+    await signOut();
+  } catch (error) {
+    console.error('Error signing Out: ', error);
+  }
+};
+
 onMounted(async () => {
   loadFavorites();
 
@@ -108,6 +125,9 @@ watch(
   },
   { deep: true }
 );
+
+console.log(user.value?.email);
+console.log(session.value);
 </script>
 
 <template>
@@ -116,14 +136,29 @@ watch(
   >
     <div class="flex justify-between">
       <h1 class="text-3xl font-bold mb-6">Build Your Recipe</h1>
-      <NuxtLink to="/favorites" class="text-blue-600 hover:underline">
-        Favorites
-      </NuxtLink>
-      <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline">
-        Add Recipe
-      </NuxtLink>
-      <div>
-        <FavouriteDropdown :favorites="favorites" />
+      <div class="flex items-center space-x-4">
+        <div class="text-sm text-gray-600">
+          Welcome, {{ user?.user_metadata?.full_name || user?.email }}!
+        </div>
+
+        <NuxtLink to="/favorites" class="text-blue-600 hover:underline">
+          Favorites
+        </NuxtLink>
+
+        <NuxtLink to="/add-recipe" class="text-blue-600 hover:underline">
+          Add Recipe
+        </NuxtLink>
+
+        <div>
+          <FavouriteDropdown :favorites="favorites" />
+        </div>
+
+        <button
+          @click="handleSignOut"
+          class="text-red-600 hover:text-red-800 text-sm"
+        >
+          Sign Out
+        </button>
       </div>
     </div>
 

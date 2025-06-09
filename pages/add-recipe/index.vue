@@ -1,4 +1,10 @@
 <script lang="ts" setup>
+import auth from '~/middleware/auth';
+
+definePageMeta({
+  middleware: auth,
+});
+
 const { createRecipe, loading, error } = useRecipes();
 
 function slugify(title: string): string {
