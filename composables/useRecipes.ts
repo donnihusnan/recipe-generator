@@ -3,6 +3,7 @@ import { useSupabase } from './useSupabase';
 
 export const useRecipes = () => {
   const supabase = useSupabase();
+  const { user } = useAuth();
   const recipes = ref<Recipe[]>([]);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
@@ -39,7 +40,7 @@ export const useRecipes = () => {
     }
   };
 
-  const getRecipeById = async (id: number): Promise<Recipe | null> => {
+  const getRecipeById = async (id: string): Promise<Recipe | null> => {
     try {
       loading.value = true;
       clearError();
@@ -103,9 +104,32 @@ export const useRecipes = () => {
     }
   };
 
+  const getUserRecipes = async (): Promise<void> => {
+    try {
+      loading.value = true;
+      clearError();
+
+      if (!user.value) throw new Error('User not authenticated');
+
+      const { data, error: supabaseError } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('user_id', user.value.id)
+        .order('created_at', { ascending: false });
+
+      if (supabaseError) throw supabaseError;
+
+      recipes.value = data || [];
+    } catch (err) {
+      handleError(err, 'fetching user recipes');
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const createRecipe = async (
     recipe: Omit<Recipe, 'id' | 'created_at' | 'updated_at'>
-  ): Promise<Recipe[] | null> => {
+  ): Promise<Recipe | null> => {
     try {
       loading.value = true;
       clearError();
@@ -132,7 +156,7 @@ export const useRecipes = () => {
   };
 
   const updateRecipe = async (
-    id: number,
+    id: string,
     updates: Partial<Omit<Recipe, 'id'>>
   ): Promise<Recipe[] | null> => {
     try {
@@ -164,7 +188,7 @@ export const useRecipes = () => {
     }
   };
 
-  const deleteRecipe = async (id: number): Promise<void> => {
+  const deleteRecipe = async (id: string): Promise<void> => {
     try {
       loading.value = true;
       error.value = null;
@@ -255,6 +279,7 @@ export const useRecipes = () => {
     getRecipes,
     getRecipeById,
     getRecipeBySlug,
+    getUserRecipes,
     createRecipe,
     updateRecipe,
     deleteRecipe,

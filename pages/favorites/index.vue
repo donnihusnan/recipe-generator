@@ -1,56 +1,91 @@
 <script lang="ts" setup>
-type Recipe = {
-  id: number;
-  title: string;
-  ingredients: string[];
-  instructions: string;
-};
+import { onMounted, ref, computed } from 'vue';
+import { useFavorites } from '@/composables/useFavorites';
+import { useRecipes } from '@/composables/useRecipes';
+import { useAuth } from '@/composables/useAuth';
+import type { Recipe } from '@/types/recipe';
 
-const favorites = ref<Recipe[]>([]);
+const { favorites, loadFavorites, loading: favLoading } = useFavorites();
+const { getRecipeById } = useRecipes();
+const { isAuthenticated } = useAuth();
 
-onMounted(() => {
-  const stored = localStorage.getItem('favorites');
-  if (stored) {
-    favorites.value = JSON.parse(stored);
+const recipes = ref<Recipe[]>([]);
+const loading = ref<boolean>(false);
+const error = ref<string | null>(null);
+
+const fetchFavoriteRecipes = async () => {
+  if (!isAuthenticated.value) return;
+
+  try {
+    loading.value = true;
+    await loadFavorites();
+
+    const recipePromises = favorites.value.map((id) => getRecipeById(id));
+    const fetchedRecipes = await Promise.all(recipePromises);
+    recipes.value = fetchedRecipes.filter((r): r is Recipe => r !== null);
+  } catch (err) {
+    error.value = 'Failed to load favorite recipes';
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
-});
-
-const removeFromFavorites = (recipe: Recipe) => {
-  favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
-  localStorage.setItem('favorites', JSON.stringify(favorites.value));
 };
+
+onMounted(fetchFavoriteRecipes);
 </script>
 
 <template>
   <main
-    class="min-h-screen mx-auto p-8 bg-gradient-to-b from-white to-gray-100 sm:w-full md:w-full lg:w-[50%]"
+    class="min-h-screen mx-auto p-8 bg-gradient-to-b from-cyan-50 via-white to-indigo-50 sm:w-full lg:w-[50%]"
   >
-    <h1 class="text-3xl font-bold mb-6">💾 Your Favorite Recipes</h1>
-
-    <div v-if="favorites.length" class="space-y-6">
-      <div
-        v-for="recipe in favorites"
-        :key="recipe.id"
-        class="bg-white p-4 rounded-md shadow"
+    <div class="mb-6">
+      <NuxtLink
+        to="/"
+        class="inline-block text-indigo-600 font-medium hover:text-indigo-800 hover:underline transition"
       >
-        <NuxtLink
-          :to="`/recipes/${recipe.id}`"
-          class="text-xl font-bold mb-2"
-          >{{ recipe.title }}</NuxtLink
-        >
-        <p>{{ recipe.ingredients.join(', ') }}</p>
-        <p>{{ recipe.instructions }}</p>
-        <button
-          @click="removeFromFavorites(recipe)"
-          class="mt-2 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
-        >
-          ❌ Remove from Favorites
-        </button>
+        ← Back to Home
+      </NuxtLink>
+    </div>
+
+    <h1
+      class="text-3xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-8"
+    >
+      My Favorite Recipes
+    </h1>
+
+    <div
+      v-if="favLoading || loading"
+      class="text-center text-gray-600 animate-pulse"
+    >
+      Loading favorites...
+    </div>
+
+    <div v-else-if="error" class="text-center text-red-600 font-medium">
+      {{ error }}
+    </div>
+
+    <div v-else-if="recipes.length === 0" class="text-center text-gray-500">
+      You have no favorite recipes.
+    </div>
+
+    <div class="grid gap-6" v-else>
+      <div
+        v-for="recipe in recipes"
+        :key="recipe.id"
+        class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-shadow"
+      >
+        <NuxtLink :to="`/recipes/${recipe.slug}`" class="block group">
+          <h2
+            class="text-xl font-semibold text-indigo-700 group-hover:underline"
+          >
+            {{ recipe.title }}
+          </h2>
+          <p class="text-gray-600 text-sm mt-2">
+            {{ recipe.ingredients.slice(0, 3).join(', ')
+            }}{{ recipe.ingredients.length > 3 ? ', ...' : '' }}
+          </p>
+        </NuxtLink>
       </div>
     </div>
-    <p v-else class="text-gray-600">You have no saved recipes yet</p>
-    <NuxtLink to="/" class="inline-block mt-4 text-blue-600 hover:underline">
-      ← Back to Menu
-    </NuxtLink>
   </main>
 </template>

@@ -1,53 +1,134 @@
-// composables/useFavorites.ts
+import { ref, readonly } from 'vue';
+import { useSupabase } from './useSupabase';
+import { useAuth } from './useAuth';
+
 export const useFavorites = () => {
-  const favorites = ref<any[]>([]);
+  const supabase = useSupabase();
+  const { user, isAuthenticated } = useAuth();
 
-  // Load favorites from localStorage
-  const loadFavorites = () => {
-    if (process.client) {
-      const stored = localStorage.getItem('favorites');
-      if (stored) {
-        favorites.value = JSON.parse(stored);
-      }
+  // Changed from number[] to string[] for UUIDs
+  const favorites = ref<string[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
+
+  const handleError = (err: unknown, context: string) => {
+    const errorMessage =
+      err instanceof Error ? err.message : 'An unknown error occurred';
+    error.value = errorMessage;
+    console.error(`Error in ${context}:`, err);
+  };
+
+  const clearError = () => {
+    error.value = null;
+  };
+
+  const loadFavorites = async () => {
+    if (!isAuthenticated.value || !user.value) {
+      console.warn('User not authenticated, cannot load favorites');
+      return;
+    }
+
+    try {
+      loading.value = true;
+      clearError();
+
+      const { data, error: supabaseError } = await supabase
+        .from('favorites')
+        .select('recipe_id')
+        .eq('user_id', user.value.id);
+
+      if (supabaseError) throw supabaseError;
+
+      favorites.value =
+        data?.map((fav: { recipe_id: string }) => fav.recipe_id) || [];
+
+      console.log('Loaded favorites:', favorites.value);
+    } catch (err) {
+      handleError(err, 'loading favorites');
+    } finally {
+      loading.value = false;
     }
   };
 
-  // Save favorites to localStorage
-  const saveFavorites = () => {
-    if (process.client) {
-      localStorage.setItem('favorites', JSON.stringify(favorites.value));
+  const addFavorite = async (recipeId: string) => {
+    if (!isAuthenticated.value || !user.value) {
+      console.warn('User not authenticated, cannot add favorite');
+      return;
+    }
+
+    // Check if already favorited to prevent duplicates
+    if (favorites.value.includes(recipeId)) {
+      console.log('Recipe already in favorites');
+      return;
+    }
+
+    try {
+      loading.value = true;
+      clearError();
+
+      const { error: supabaseError } = await supabase
+        .from('favorites')
+        .insert([{ user_id: user.value.id, recipe_id: recipeId }]);
+
+      if (supabaseError) throw supabaseError;
+
+      // Update local state
+      favorites.value.push(recipeId);
+      console.log('Added favorite:', recipeId);
+    } catch (err) {
+      handleError(err, 'adding favorite');
+      throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  // Add to favorites
-  const addToFavorites = (recipe: any) => {
-    if (!favorites.value.some((r) => r.id === recipe.id)) {
-      favorites.value.push(recipe);
-      saveFavorites();
+  const removeFavorite = async (recipeId: string) => {
+    if (!isAuthenticated.value || !user.value) {
+      console.warn('User not authenticated, cannot remove favorite');
+      return;
+    }
+
+    try {
+      loading.value = true;
+      clearError();
+
+      const { error: supabaseError } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.value.id)
+        .eq('recipe_id', recipeId);
+
+      if (supabaseError) throw supabaseError;
+
+      // Update local state
+      favorites.value = favorites.value.filter((id) => id !== recipeId);
+      console.log('Removed favorite:', recipeId);
+    } catch (err) {
+      handleError(err, 'removing favorite');
+      throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  // Remove from favorites
-  const removeFromFavorites = (recipe: any) => {
-    favorites.value = favorites.value.filter((r) => r.id !== recipe.id);
-    saveFavorites();
+  const isFavorite = (recipeId: string): boolean => {
+    return favorites.value.includes(recipeId);
   };
 
-  // Check if recipe is favorite
-  const isFavorite = (recipe: any) => {
-    return favorites.value.some((r) => r.id === recipe.id);
+  const clearFavorites = () => {
+    favorites.value = [];
+    error.value = null;
   };
-
-  // Initialize on mount
-  onMounted(() => {
-    loadFavorites();
-  });
 
   return {
     favorites: readonly(favorites),
-    addToFavorites,
-    removeFromFavorites,
-    isFavorite,
+    loading: readonly(loading),
+    error: readonly(error),
     loadFavorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    clearFavorites,
   };
 };
