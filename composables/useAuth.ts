@@ -8,7 +8,6 @@ type AuthState = {
   initialized: boolean;
 };
 
-// Gunakan global state agar tersinkronisasi di semua komponen
 const globalAuthState = reactive<AuthState>({
   user: null,
   session: null,
@@ -94,7 +93,6 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      // Update state immediately
       globalAuthState.session = data.session;
       globalAuthState.user = data.user;
 
@@ -113,7 +111,7 @@ export const useAuth = () => {
     }
   };
 
-  const signInWithOAuth = async (provider: 'google' | 'github') => {
+  const signInWithOAuth = async (provider: 'google') => {
     try {
       globalAuthState.loading = true;
       clearError();
@@ -145,15 +143,12 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      // Clear state immediately
       globalAuthState.session = null;
       globalAuthState.user = null;
 
-      // Wait for next tick before navigating
       await nextTick();
 
-      // Navigate to login page
-      await navigateTo('/auth/login', { replace: true });
+      await navigateTo('/', { replace: true });
     } catch (error) {
       handleError(error as AuthError, 'signing out');
       throw error;
@@ -213,13 +208,11 @@ export const useAuth = () => {
 
         if (event === 'SIGNED_IN') {
           console.log('User signed in: ', session?.user?.email);
-          // Optional: navigate to home if not already there
           if (process.client && window.location.pathname.startsWith('/auth/')) {
             await navigateTo('/', { replace: true });
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
-          // Optional: navigate to login if not already there
           if (
             process.client &&
             !window.location.pathname.startsWith('/auth/')

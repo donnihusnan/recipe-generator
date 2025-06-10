@@ -17,7 +17,6 @@ export default defineNuxtPlugin(async () => {
           const isAuthPage = currentPath.startsWith('/auth/');
           const isAuthenticatedUser = isAuthenticated.value;
 
-          // Redirect authenticated users away from auth pages
           if (isAuthenticatedUser && isAuthPage) {
             navigateTo('/', { replace: true });
           }
