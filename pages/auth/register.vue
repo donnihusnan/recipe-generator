@@ -34,7 +34,6 @@ const handleSubmit = async () => {
     successMessage.value =
       'Account created successfully! Please check your email to verify your account.';
 
-    // Reset form
     Object.assign(form, {
       name: '',
       email: '',
@@ -42,20 +41,15 @@ const handleSubmit = async () => {
       confirmPassword: '',
       agreeTerms: false,
     });
-  } catch (err) {
-    // Error is handled in the composable
-  }
+  } catch (err) {}
 };
 
 const signInWithProvider = async (provider: 'google') => {
   try {
     await signInWithOAuth(provider);
-  } catch (err) {
-    // Error is handled in the composable
-  }
+  } catch (err) {}
 };
 
-// Clear error when component unmounts
 onUnmounted(() => {
   clearError();
 });
@@ -66,7 +60,6 @@ onUnmounted(() => {
     class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
   >
     <div class="max-w-md w-full space-y-8">
-      <!-- Hero Section -->
       <div class="text-center">
         <div
           class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6"
@@ -87,12 +80,10 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <!-- Enhanced Form Container -->
       <div
         class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8"
       >
         <form class="space-y-6" @submit.prevent="handleSubmit">
-          <!-- Error Message -->
           <div
             v-if="error"
             class="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-400 rounded-r-xl p-4"
@@ -115,7 +106,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Success Message -->
           <div
             v-if="successMessage"
             class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-r-xl p-4"
@@ -139,7 +129,6 @@ onUnmounted(() => {
           </div>
 
           <div class="space-y-5">
-            <!-- Full Name Field -->
             <div>
               <label
                 for="name"
@@ -162,7 +151,6 @@ onUnmounted(() => {
               />
             </div>
 
-            <!-- Email Field -->
             <div>
               <label
                 for="email"
@@ -185,7 +173,6 @@ onUnmounted(() => {
               />
             </div>
 
-            <!-- Password Field -->
             <div>
               <label
                 for="password"
@@ -222,7 +209,6 @@ onUnmounted(() => {
               </p>
             </div>
 
-            <!-- Confirm Password Field -->
             <div>
               <label
                 for="confirmPassword"
@@ -246,7 +232,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Terms Checkbox -->
           <div
             class="flex items-start space-x-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-100"
           >
@@ -277,7 +262,6 @@ onUnmounted(() => {
             </label>
           </div>
 
-          <!-- Submit Button -->
           <button
             type="submit"
             :disabled="isLoading || !isFormValid"
@@ -309,7 +293,6 @@ onUnmounted(() => {
             </div>
           </button>
 
-          <!-- Divider -->
           <div class="relative my-8">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-gray-200" />
@@ -323,7 +306,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Social Login Buttons -->
           <div class="mt-6">
             <button
               type="button"
@@ -349,13 +331,12 @@ onUnmounted(() => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Sign in with Google
+              Google
             </button>
           </div>
         </form>
       </div>
 
-      <!-- Additional Info -->
       <div class="text-center">
         <p class="text-sm text-gray-500">
           By creating an account, you'll be able to save your favorite recipes

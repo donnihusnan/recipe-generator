@@ -96,10 +96,8 @@ export const useAuth = () => {
       globalAuthState.session = data.session;
       globalAuthState.user = data.user;
 
-      // Wait for next tick before navigating
       await nextTick();
 
-      // Navigate to home page
       await navigateTo('/', { replace: true });
 
       return data;

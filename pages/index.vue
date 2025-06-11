@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { Recipe } from '@/types/recipe';
-import { useAuth } from '~/composables/useAuth';
-
 const {
   getRecipes,
   filterByIngredients,
@@ -16,31 +13,22 @@ const allIngredients = [
   'Beef',
   'Chicken',
   'Egg',
+  'Fish',
   'Bread',
   'Rice',
-  'Tomato',
   'Cheese',
-  'Lettuce',
-  'Basil',
-  'Cucumber',
   'Pasta',
   'Bacon',
   'Sausage',
   'Shrimp',
   'Salmon',
   'Turkey',
-  'Spinach',
   'Mushroom',
   'Potato',
-  'Tortilla',
+  'Corn',
   'Noodles',
-  'Pepper',
-  'Butter',
-  'Mayonnaise',
-  'Soy Sauce',
-  'Vinegar',
-  'Chili',
   'Yogurt',
+  'Tomato',
   'Honey',
   'Milk',
 ];
@@ -102,7 +90,6 @@ watch(
       </div>
     </div>
 
-    <!-- Enhanced Ingredient Selector -->
     <div
       class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8"
     >
@@ -118,7 +105,6 @@ watch(
       />
     </div>
 
-    <!-- Stats Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <div
         class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-all duration-300"
@@ -155,7 +141,6 @@ watch(
       </div>
     </div>
 
-    <!-- Selected ingredients display -->
     <div v-if="selectedIngredients.length > 0" class="mb-6">
       <div
         class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-r-xl p-4"
@@ -173,7 +158,6 @@ watch(
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="text-center py-16">
       <div
         class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mb-4 animate-pulse"
@@ -203,7 +187,6 @@ watch(
       </p>
     </div>
 
-    <!-- Recipe Results -->
     <div v-else-if="filteredRecipes.length" class="space-y-6">
       <div class="text-center mb-8">
         <h2
@@ -291,7 +274,6 @@ watch(
       </div>
     </div>
 
-    <!-- No Results State -->
     <div v-else-if="selectedIngredients.length > 0" class="text-center py-16">
       <div
         class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-8 border border-yellow-200"
@@ -307,7 +289,6 @@ watch(
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else class="text-center py-16">
       <div
         class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 border border-indigo-200"

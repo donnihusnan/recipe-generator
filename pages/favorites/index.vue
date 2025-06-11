@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed } from 'vue';
 import { useFavorites } from '@/composables/useFavorites';
 import { useRecipes } from '@/composables/useRecipes';
 import { useAuth } from '@/composables/useAuth';
@@ -35,9 +34,7 @@ onMounted(fetchFavoriteRecipes);
 </script>
 
 <template>
-  <main
-    class="min-h-screen mx-auto p-8 bg-gradient-to-b from-cyan-50 via-white to-indigo-50 sm:w-full lg:w-[50%]"
-  >
+  <main class="min-h-screen mx-auto p-8 sm:w-full md:w-full lg:w-[50%]">
     <div class="mb-6">
       <NuxtLink
         to="/"

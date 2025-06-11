@@ -6,7 +6,6 @@ export const useFavorites = () => {
   const supabase = useSupabase();
   const { user, isAuthenticated } = useAuth();
 
-  // Changed from number[] to string[] for UUIDs
   const favorites = ref<string[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -56,7 +55,6 @@ export const useFavorites = () => {
       return;
     }
 
-    // Check if already favorited to prevent duplicates
     if (favorites.value.includes(recipeId)) {
       console.log('Recipe already in favorites');
       return;
@@ -101,7 +99,6 @@ export const useFavorites = () => {
 
       if (supabaseError) throw supabaseError;
 
-      // Update local state
       favorites.value = favorites.value.filter((id) => id !== recipeId);
       console.log('Removed favorite:', recipeId);
     } catch (err) {

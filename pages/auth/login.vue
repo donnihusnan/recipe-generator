@@ -59,7 +59,6 @@ onUnmounted(() => {
 
 <template>
   <main class="min-h-screen mx-auto p-8 sm:w-full md:w-full lg:w-[50%]">
-    <!-- Hero Section -->
     <div class="text-center mb-8">
       <div
         class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4"
@@ -69,7 +68,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Login Form Container -->
     <div
       class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8"
     >
@@ -92,7 +90,6 @@ onUnmounted(() => {
       </div>
 
       <form class="space-y-6" @submit.prevent="handleSubmit">
-        <!-- Error Message -->
         <div
           v-if="error"
           class="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-400 rounded-r-xl p-4"
@@ -101,7 +98,6 @@ onUnmounted(() => {
         </div>
 
         <div class="space-y-6">
-          <!-- Email Field -->
           <div>
             <label
               for="email"
@@ -122,7 +118,6 @@ onUnmounted(() => {
             />
           </div>
 
-          <!-- Password Field -->
           <div>
             <label
               for="password"
@@ -144,7 +139,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <input
@@ -173,7 +167,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Sign In Button -->
         <div>
           <button
             type="submit"
@@ -209,7 +202,6 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Divider -->
         <div class="mt-8">
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
@@ -224,7 +216,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Google Sign In Button -->
           <div class="mt-6">
             <button
               type="button"
@@ -250,14 +241,13 @@ onUnmounted(() => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Sign in with Google
+              Google
             </button>
           </div>
         </div>
       </form>
     </div>
 
-    <!-- Additional Info -->
     <div class="text-center">
       <div
         class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200"

@@ -19,7 +19,7 @@ function slugify(title: string): string {
 const title = ref('');
 const ingredient = ref('');
 const instructions = ref('');
-const message = ref('');;
+const message = ref('');
 
 const addRecipe = async () => {
   if (!title.value || !ingredient.value || !instructions.value) {
@@ -51,9 +51,7 @@ watch(error, (newError) => {
 </script>
 
 <template>
-  <main
-    class="min-h-screen mx-auto p-8 bg-gradient-to-b from-indigo-50 via-white to-cyan-50 sm:w-full lg:w-[50%]"
-  >
+  <main class="min-h-screen mx-auto p-8 sm:w-full lg:w-[50%]">
     <div
       class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8"
     >

@@ -4,10 +4,8 @@ import { useAuth } from '~/composables/useAuth';
 export default defineNuxtPlugin(async () => {
   const { initialize, initialized, isAuthenticated } = useAuth();
 
-  // Initialize auth only if not already initialized
   await initialize();
 
-  // Wait for initialization and then handle routing
   if (process.client) {
     watch(
       initialized,
@@ -19,9 +17,7 @@ export default defineNuxtPlugin(async () => {
 
           if (isAuthenticatedUser && isAuthPage) {
             navigateTo('/', { replace: true });
-          }
-          // Redirect unauthenticated users to login (except for public pages)
-          else if (
+          } else if (
             !isAuthenticatedUser &&
             !isAuthPage &&
             currentPath !== '/' &&
